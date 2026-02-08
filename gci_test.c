@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/stat.h>
-#include <dlfcn.h>
+
 #include "gci.hf"
+#include "gcirtl.hf"
 
 BoolType login_example(void);
 void check_error(void);
-void check_libraries(void);
+void load_library(void);
 
 int main() {
     GciErrSType err;
@@ -26,10 +26,9 @@ int main() {
     return true;
 }
 
-void check_libraries(void) {
-  struct stat stat_buf;
-  char library_path[256];
+void load_library(void) {
   char *gemstone_path = getenv("GEMSTONE");
+  char err_buf[1024];
 
   // Verify Environment Variable exists before calling GciInit
   if (gemstone_path == NULL) {
@@ -37,31 +36,17 @@ void check_libraries(void) {
     exit(1);
   }
 
-  sprintf(library_path, "%s/%s", gemstone_path, "lib/libgcirpc-3.7.4.3-64.so");
-  printf("Looking for libraries in %s\n", library_path);
-    
-  int result = stat(library_path, &stat_buf);
-  if (result != 0) {
-    char *error_message = strerror(result);
-    fprintf(stderr, "Unable to stat library: %s\n", error_message);
-    exit(result);
+  BoolType result = GciRtlLoad(true, "$GEMSTONE/lib", err_buf, sizeof(err_buf));
+  if (result == false) {
+    fprintf(stderr, "Library load failed, %s\n", err_buf);
   }
 
-  void *handle = dlopen(library_path, RTLD_NOW);
-  if (result != 0) {
-    char *error_message = strerror(result);
-    fprintf(stderr, "Unable to load library: %s\n", error_message);
-    exit(result);
-  }
-  printf("Successfully loaded %s, now calling dlclose()\n", library_path);
-  dlclose(handle);
 }
 
 void check_error() {
      GciErrSType errInfo;
-     memset(&errInfo, 0, sizeof(GciErrSType));
      if (GciErr(&errInfo)) {
-      printf("error category %ld number %d, %s\n",
+      printf("error category " FMT_OID " number %d, %s\n",
 	     errInfo.category, errInfo.number, errInfo.message);
     }
 }     
@@ -74,20 +59,21 @@ BoolType login_example(void) {
   const char *gsUserName = "SystemUser";
   const char *gsPassword = "swordfish";
 
-  check_libraries();
+  // You *must* call GciRtLoad or GciInit may simply crash without any diagnostic message
+  load_library();
 
-  printf("Initializing Gci...\n");
   // GciInit required before first login
   if (!GciInit()) {
     printf("GciInit failed\n");
     return false;
   }
 
-  printf("GciInit succeeded. Calling GciSetNet...\n");
   GciSetNet(stoneName, hostUserId, hostPassword, gemService);
   check_error();
   
   BoolType success = GciLogin(gsUserName, gsPassword);
-  check_error();
+  if (!success) {
+    check_error();
+  }
   return success;
 }

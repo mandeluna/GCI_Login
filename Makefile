@@ -34,7 +34,7 @@ CXXFLAGS = -fmessage-length=0 -fcheck-new -ggdb -m64 -pipe		  \
 
 LINKFLAGS = $(GEMSTONE)/lib/gcirtlobj.o -m64				  \
 	-Wl,-Bdynamic,--no-as-needed -lpthread -Wl,--as-needed -lcrypt    \
-	-ldl -lc -lm -lrt -z noexecstack -Wl,-traditional -Wl,-z,lazy
+	-ldl -lc -lm -lrt -z noexecstack -Wl,-z,lazy
 
 all: $(TARGET)
 

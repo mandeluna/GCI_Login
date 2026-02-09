@@ -9,8 +9,6 @@ void check_error(void);
 void load_library(void);
 
 int main() {
-    GciErrSType err;
-
     printf("Attempting to log in to GemStone\n");
 
     BoolType success = login_example();
@@ -19,7 +17,7 @@ int main() {
         printf("Successfully logged in\n");
         GciLogout();
     } else {
-        fprintf(stderr, "Login failed: %s\n", err.message);
+        fprintf(stderr, "Login failed.\n");
         return false;
     }
 
@@ -46,8 +44,8 @@ void load_library(void) {
 void check_error() {
      GciErrSType errInfo;
      if (GciErr(&errInfo)) {
-      printf("error category " FMT_OID " number %d, %s\n",
-	     errInfo.category, errInfo.number, errInfo.message);
+      printf("error category " FMT_OID " number %d, %s, reason: %s\n",
+	     errInfo.category, errInfo.number, errInfo.message, errInfo.reason);
     }
 }     
 
@@ -55,7 +53,7 @@ BoolType login_example(void) {
   const char *stoneName = "guava_ops";
   const char *hostUserId = "";
   const char *hostPassword = "";
-  const char *gemService = "gemnetobject!tcp@localhost#netldi:8080#task!gemnetobject";
+  const char *gemService = "!tcp@localhost#netldi:8080#task!gemnetobject";
   const char *gsUserName = "SystemUser";
   const char *gsPassword = "swordfish";
 
